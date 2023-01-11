@@ -140,12 +140,13 @@ async function main()
         {
             const sx = (touches[0].clientX)// + touches[1].clientX) / 2;
             const sy = (touches[0].clientY)// + touches[1].clientY) / 2;
-            const ex = sx + Math.cos(multi_touch_listener.rotation_theta) * 900;
-            const ey = sy + Math.sin(multi_touch_listener.rotation_theta) * 900;
+            const ex = touches[1].clientX;//Math.cos(multi_touch_listener.rotation_theta) * 900;
+            const ey = touches[1].clientY;//Math.sin(multi_touch_listener.rotation_theta) * 900;
             ctx.lineWidth = 30;
             ctx.beginPath();
+
             ctx.moveTo(sx, sy);
-            ctx.lineTo(ex, ey);
+            ctx.arc((sx + ex) / 2, (sy + ey) / 2, multi_touch_listener.pinch_distance / 2, multi_touch_listener.rotation_theta, Math.PI + multi_touch_listener.rotation_theta, true)
             ctx.stroke();
             ctx.lineWidth = 2;
         }

@@ -471,6 +471,7 @@ export class MultiTouchListener {
     previous_touches:any[];
     pinch_listening:boolean;
     start_delta_distance:number;
+    pinch_distance:number;
     start_theta:number;
     rotation_theta:number;
     rotation_listening:boolean;
@@ -481,6 +482,7 @@ export class MultiTouchListener {
         this.lastDistance = 0;
         this.start_theta = 0;
         this.rotation_theta = 0;
+        this.pinch_distance = 0;
         this.start_delta_distance = 0;
         this.rotation_listening = false;
         this.pinch_listening = false;
@@ -511,6 +513,7 @@ export class MultiTouchListener {
                 this.lastDistance = 0; 
                 this.start_theta = -100; 
                 this.rotation_theta = 0;
+                this.pinch_distance = 0;
                 this.start_delta_distance = 0;
                 this.previous_touches = []; 
                 this.single_touch_listener.touchEndHandler(event);
@@ -610,6 +613,7 @@ export class MultiTouchListener {
         const newDist:number = Math.sqrt(Math.pow((touch1.clientX - touch2.clientX),2) + Math.pow(touch1.clientY - touch2.clientY, 2));
         event.delta = this.lastDistance - newDist;
         event.distance = newDist;
+        this.pinch_distance = newDist;
         const theta = this.get_theta(touch1, touch2);
         event.rotation_theta = theta;
         event.rotation_delta = -theta + this.rotation_theta;
