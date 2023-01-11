@@ -1,5 +1,5 @@
 import { isTouchSupported, MultiTouchListener, KeyboardHandler, MultiTouchEvent} from './io.js'
-import { getHeight, getWidth, GuiLabel, RollingVerticalLayout } from './gui.js'
+import { getHeight, getWidth, GuiLabel, GuiTextBox, RollingVerticalLayout } from './gui.js'
 import { clamp, FixedSizeQueue } from './utils.js'
 import { menu_font_size } from './game_utils.js'
 
@@ -8,34 +8,30 @@ async function main()
 {
     const canvas:HTMLCanvasElement = <HTMLCanvasElement> document.getElementById("screen");
     const multi_touch_listener = new MultiTouchListener(canvas, true, true, false);
-
     const gui = new RollingVerticalLayout([getWidth(), getHeight()], Math.floor(getHeight() / new GuiLabel(``, 100, 24).height()));
-    const panels = 4;
-    
     const pinch:RollingVerticalLayout = new RollingVerticalLayout([getWidth(), getHeight()], gui.stack.data.length, 0, getHeight());
     multi_touch_listener.registerCallBack("tap", (e:MultiTouchEvent) => {
-        gui.addElement(new GuiLabel(`tap time:${Date.now() - e.startTouchTime}`, gui.height(), 24));
-        //logToServer({type:"tap", time:Date.now() - e.startTouchTime}, "../data");
+        const text = `tap time:${Date.now() - e.startTouchTime}`;
+        gui.addElement(new GuiLabel(text, gui.height(), 24));
+    });
+    multi_touch_listener.registerCallBack("touchmove", (e:MultiTouchEvent) => {
+        const text = `move: dx:${e.deltaX}, dy: ${e.deltaY}`;
+        pinch.addElement(new GuiLabel(text, gui.height(), 24));
     });
     multi_touch_listener.registerCallBack("doubletap", e => {
         gui.addElement(new GuiLabel(`double tap time:${Date.now() - e.startTouchTime}, time between:${e.timeSinceLastTouch}`, gui.height(), 24));
-        //logToServer({type:"doubletap", time:Date.now() - e.startTouchTime}, "../data");
     });
     multi_touch_listener.registerCallBack("longpress", e => {
         gui.addElement(new GuiLabel(`long press time:${Date.now() - e.startTouchTime}`, gui.height(), 24));
-        //logToServer({type:"doubletap", time:Date.now() - e.startTouchTime}, "../data");
     });
     multi_touch_listener.registerCallBack("swipe", e => {
         gui.addElement(new GuiLabel(`swipe direction:${e.swipe_direction}`, gui.height(), 24));
-        //logToServer({type:"swipe", direction:e.swipe_direction}, "../data");
     });
     multi_touch_listener.registerCallBack("rotate", e => {
         gui.addElement(new GuiLabel(`rotation theta:${e.rotation_theta}, delta:${e.rotation_delta}`, gui.height(), 24));
-        //logToServer({type:"rotation", angle:e.rotation_theta, delta:e.rotation_delta}, "../data");
     });
-    multi_touch_listener.registerCallBackPredicate("pinch", () => true, (event:any) => {
+    multi_touch_listener.registerCallBack("pinch", (event:any) => {
         pinch.addElement(new GuiLabel(`pinch delta:${event.delta}`, gui.height(), 24));
-        //logToServer({type:"pinch", delta:event.delta}, "../data");
     });
 
     canvas.onmousemove = (event:MouseEvent) => {
@@ -134,7 +130,7 @@ async function main()
         ctx.fillStyle = "#FFFFFF";
         text = `avg fps: ${Math.floor(1000 * time_queue.length / sum)}, ${low_fps?"low":"ins"} fps: ${instantaneous_fps}`;
         fps_text_width = ctx.measureText(text).width;
-        if(render_fps)
+        //if(render_fps)
         {
             ctx.strokeText(text, width - fps_text_width - 10, menu_font_size());
             ctx.fillText(text, width - fps_text_width - 10, menu_font_size());

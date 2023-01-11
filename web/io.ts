@@ -469,6 +469,8 @@ export class MultiTouchListener {
     listener_type_map:MultiTouchListenerTypes;
     registeredMultiTouchEvent:boolean;
     previous_touches:any[];
+    pinch_listening:boolean;
+    start_delta_distance:number;
     start_theta:number;
     rotation_theta:number;
     rotation_listening:boolean;
@@ -479,7 +481,9 @@ export class MultiTouchListener {
         this.lastDistance = 0;
         this.start_theta = 0;
         this.rotation_theta = 0;
+        this.start_delta_distance = 0;
         this.rotation_listening = false;
+        this.pinch_listening = false;
         this.previous_touches = [];
         this.listener_type_map = new MultiTouchListenerTypes();
         this.registeredMultiTouchEvent = false;
@@ -490,21 +494,28 @@ export class MultiTouchListener {
             component.addEventListener('touchstart', event => {
                 this.single_touch_listener.touchStartHandler(event);
                 this.touchStartHandler(event);
+                if(preventDefault)
+                    event.preventDefault();
             });
             component.addEventListener('touchmove', event => {
                 if(!this.registeredMultiTouchEvent)
                     this.single_touch_listener.touchMoveHandler(event);
                 this.touchMoveHandler(event);
+                if(preventDefault)
+                    event.preventDefault();
             });
             component.addEventListener('touchend', event => {
                 this.registeredMultiTouchEvent = false; 
                 this.rotation_listening = false; 
+                this.pinch_listening = false;
                 this.lastDistance = 0; 
                 this.start_theta = -100; 
                 this.rotation_theta = 0;
+                this.start_delta_distance = 0;
                 this.previous_touches = []; 
                 this.single_touch_listener.touchEndHandler(event);
-                event.preventDefault();
+                if(preventDefault)
+                    event.preventDefault();
             });
         }
 
@@ -519,6 +530,8 @@ export class MultiTouchListener {
             component.addEventListener('mousedown', (event:any) => {(<any>event).changedTouches = {};(<any>event).changedTouches.item = (x:any) => event; this.single_touch_listener.touchStartHandler(event);});
             component.addEventListener('mousemove', (event:any) => {
                 this.single_touch_listener.touchMoveHandler(event);
+                if(preventDefault)
+                    event.preventDefault();
             });
             component.addEventListener('mouseup', (event:any) => {(<any>event).changedTouches = {};(<any>event).changedTouches.item = (x:any) => event; this.single_touch_listener.touchEndHandler(event)});
     
@@ -601,12 +614,25 @@ export class MultiTouchListener {
         event.rotation_theta = theta;
         event.rotation_delta = -theta + this.rotation_theta;
         this.rotation_theta = theta;
-        //handle start theta attribute
+
+        //handle start theta attribute, and rotation listening
         if(this.start_theta === -100)
             this.start_theta = theta;
+        else if(!this.pinch_listening && Math.abs(this.start_theta - theta) > Math.PI / 12)
+            this.rotation_listening = true;
+        
 
-        this.callHandler("rotate", event);
-        this.callHandler("pinch", event);
+        if(this.start_delta_distance === 0)
+            this.start_delta_distance = newDist;
+        else if(Math.abs(this.start_delta_distance - newDist) > Math.min(getHeight(), getWidth()) / 10 && Math.abs(event.delta) > Math.min(getHeight(), getWidth()) / 35)
+            this.pinch_listening = true;
+
+        if(this.rotation_listening)
+            this.callHandler("rotate", event);
+        if(this.pinch_listening)
+            this.callHandler("pinch", event);
+
+
         event.preventDefault();
         this.lastDistance = newDist;
         if(touch1 && touch2)
