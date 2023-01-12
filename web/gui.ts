@@ -1700,6 +1700,7 @@ export interface TextBoxEvent {
     oldCursor:number;
     oldText:string;
 };
+
 export class GuiTextBox implements GuiElement {
     text:string;
     asNumber:Optional<number>;
@@ -2018,7 +2019,7 @@ export class GuiTextBox implements GuiElement {
         else
             this.asNumber.clear();
     }
-    handleTouchEvents(type:string, e:any):void
+    handleTouchEvents(type:string, e:TouchMoveEvent):void
     {
         if(this.active()){
             switch(type)
@@ -2039,6 +2040,7 @@ export class GuiTextBox implements GuiElement {
                         }
                     }
                 }
+                this.cursor = this.screenToTextIndex(e.touchPos);
                 this.drawInternalAndClear();
                 break;
             }
@@ -2147,6 +2149,26 @@ export class GuiTextBox implements GuiElement {
                 index = i;
         }
         return index;
+    }
+    screenToTextIndex(pos:number[]):number
+    {
+        const x = pos[0] - 50;// + this.scroll[0];
+        const y = pos[1] + this.scroll[1];
+        const rows:TextRow[] = this.rows;
+        let letters_in_previous_rows = 0;
+        let row_index = 0;
+        while(rows[row_index].y + this.fontSize < y)
+        {
+            letters_in_previous_rows += rows[row_index].text.length;
+            row_index++;
+        }
+        let column_index = 0;
+        while(rows[row_index].text[column_index] && rows[row_index].x + this.ctx.measureText(rows[row_index].text.substring(0, column_index + 1)).width < x)
+        {
+            column_index++;
+        }
+        column_index++;
+        return letters_in_previous_rows + column_index;
     }
     adjustScrollToCursor():TextRow[]
     {

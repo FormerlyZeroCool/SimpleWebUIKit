@@ -385,6 +385,8 @@ export class MultiTouchListener {
             component.addEventListener("mouseleave", (event) => { this.mouse_over_element = false; });
             component.addEventListener('mousedown', (event) => { event.changedTouches = {}; event.changedTouches.item = (x) => event; this.single_touch_listener.touchStartHandler(event); });
             component.addEventListener('mousemove', (event) => {
+                event.changedTouches = {};
+                event.changedTouches.item = (x) => event;
                 this.single_touch_listener.touchMoveHandler(event);
                 if (preventDefault)
                     event.preventDefault();
@@ -461,7 +463,7 @@ export class MultiTouchListener {
             this.rotation_listening = true;
         if (this.start_delta_distance === 0)
             this.start_delta_distance = newDist;
-        else if (Math.abs(this.start_delta_distance - newDist) > Math.min(getHeight(), getWidth()) / 10 && Math.abs(event.delta) > Math.min(getHeight(), getWidth()) / 35)
+        else if (Math.abs(this.start_delta_distance - newDist) > Math.min(getHeight(), getWidth()) / 20 && Math.abs(event.delta) > Math.min(getHeight(), getWidth()) / 65)
             this.pinch_listening = true;
         if (this.rotation_listening)
             this.callHandler("rotate", event);
